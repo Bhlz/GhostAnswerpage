@@ -52,9 +52,9 @@ export default function GhostAnswerLanding() {
         <div className="mx-auto flex w-full max-w-7xl items-center justify-between rounded-2xl border border-white/15 bg-black/40 px-4 py-3 shadow-[0_16px_60px_-24px_rgba(0,0,0,0.9)] backdrop-blur-2xl supports-[backdrop-filter]:bg-black/30 sm:px-6">
           <div className="flex items-center">
             <img
-              src="/ghostanswer-logo.svg"
+              src="/ghostanswer-logo.webp"
               alt="GhostAnswer"
-              className="h-10 w-auto invert opacity-95 drop-shadow-[0_0_18px_rgba(255,255,255,0.18)]"
+              className="h-10 w-auto object-contain"
             />
           </div>
           <MagneticButton href="/downloads/ghostanswer-v1.0.0.zip" download>
@@ -192,9 +192,9 @@ function Veil({ revealed }: { revealed: boolean }) {
           className="flex flex-col items-center text-white/70"
         >
           <img
-            src="/ghostanswer-logo.svg"
+            src="/ghostanswer-logo.webp"
             alt="GhostAnswer"
-            className="mb-4 h-12 w-auto invert opacity-95 drop-shadow-[0_0_22px_rgba(255,255,255,0.18)]"
+            className="mb-4 h-12 w-auto object-contain"
           />
           <div className="text-center text-lg md:text-xl">Mueve el mouse o toca la pantalla para revelar</div>
           <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs backdrop-blur-xl">
