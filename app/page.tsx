@@ -107,10 +107,9 @@ export default function GhostAnswerLanding() {
           </div>
         </TiltCard>
 
+        <ShortcutShowcase />
         <CommandRibbon />
       </section>
-
-      <ShortcutShowcase />
 
       <section id="como-funciona" className="relative z-10 mx-auto w-full max-w-7xl px-6 pb-24">
         <div className="mx-auto max-w-4xl">
@@ -441,7 +440,7 @@ function ShortcutShowcase() {
   const showingDismiss = actionKey === "X";
 
   return (
-    <section className="relative z-10 mx-auto w-full max-w-7xl px-6 pb-28 pt-4">
+    <div className="relative z-10 mx-auto w-full max-w-7xl px-0 pb-16 pt-4 sm:pb-20">
       <div className="absolute inset-x-6 top-24 h-80 rounded-[3rem] bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.04),transparent_72%)] blur-3xl" />
 
       <div className="relative">
@@ -494,7 +493,7 @@ function ShortcutShowcase() {
           </div>
         </div>
       </div>
-    </section>
+    </div>
   );
 }
 
