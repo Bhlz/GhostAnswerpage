@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { motion, useMotionValue, useSpring } from "framer-motion";
+import { motion, useMotionValue, useSpring, AnimatePresence, useReducedMotion } from "framer-motion";
 import { Download, Sparkles, Terminal, Shield, Zap, EyeOff, MousePointerClick, Keyboard } from "lucide-react";
 
 export default function GhostAnswerLanding() {
@@ -93,6 +93,8 @@ export default function GhostAnswerLanding() {
           <PrimaryCTA href="/downloads/ghostanswer-v1.0.0.zip" label="Descargar GhostAnswer" icon={<Download className="h-4 w-4" />} />
           <GlassButton href="#como-funciona" icon={<MousePointerClick className="h-4 w-4" />}>Ver cómo funciona</GlassButton>
         </div>
+
+        <HeroDemo />
 
         <TiltCard className="mt-12 w-full max-w-5xl rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl">
           <div className="grid gap-6 md:grid-cols-3">
@@ -327,5 +329,320 @@ function Marquee({ children, className = "" }: { children: React.ReactNode; clas
         @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
       `}</style>
     </div>
+  );
+}
+
+// Phases:
+// 0: fade-in window
+// 1: cursor glides to question
+// 2: selection highlight grows over question
+// 3: ⌘+K keys press
+// 4: "Pensando…" visible (≥1s hold)
+// 5: crossfade to answer
+// 6: answer held + cursor moves to option B
+// 7: click pulse on B
+// 8: hold final state (B marked correct)
+// 9: fade out, then reset to 0
+const PHASE_DURATIONS = [600, 1400, 1100, 900, 1200, 500, 1300, 400, 1700, 900];
+
+function HeroDemo() {
+  const [phase, setPhase] = useState(0);
+  const prefersReducedMotion = useReducedMotion();
+
+  useEffect(() => {
+    if (prefersReducedMotion) return;
+    const total = PHASE_DURATIONS.length;
+    const d = PHASE_DURATIONS[phase];
+    const t = setTimeout(() => {
+      setPhase((p) => (p + 1) % total);
+    }, d);
+    return () => clearTimeout(t);
+  }, [phase, prefersReducedMotion]);
+
+  const showKeys = phase === 3;
+  const showPensando = phase === 4;
+  const showAnswer = phase >= 5 && phase < 9;
+  const optionBCorrect = phase >= 7 && phase < 9;
+  const fadingOut = phase === 9;
+  const clicking = phase === 7;
+
+  // selection: hidden before phase 2, drag-reveal in phase 2, visible in phase 3, cleared after Cmd+K
+  const selectionClip =
+    phase < 2 ? "inset(0 100% 0 0)" : "inset(0 0% 0 0)";
+  const selectionOpacity = phase === 2 || phase === 3 ? 1 : 0;
+
+  // cursor: idle → arrive at question start → drag to question end → keys/overlay → option B
+  const cursor =
+    phase === 0
+      ? { left: "82%", top: "82%" }
+      : phase === 1
+      ? { left: "6%", top: "23%" }
+      : phase <= 5
+      ? { left: "90%", top: "48%" }
+      : { left: "28%", top: "54%" };
+
+  return (
+    <div aria-hidden="true" className="mt-12 w-full max-w-3xl px-2">
+      <motion.div
+        className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.07] to-white/[0.02] shadow-[0_30px_80px_-20px_rgba(0,0,0,0.8)] backdrop-blur-xl"
+        initial={{ opacity: 0, y: 16, scale: 0.98 }}
+        animate={{
+          opacity: fadingOut ? 0 : 1,
+          y: fadingOut ? 8 : 0,
+          scale: fadingOut ? 0.99 : 1,
+        }}
+        transition={{ duration: fadingOut ? 0.8 : 0.7, ease: [0.22, 1, 0.36, 1] }}
+      >
+        {/* ambient glow */}
+        <div
+          className="pointer-events-none absolute inset-0 opacity-60"
+          style={{
+            background:
+              "radial-gradient(80% 50% at 50% 0%, rgba(255,255,255,0.06), transparent 70%)",
+          }}
+        />
+
+        {/* window chrome */}
+        <div className="relative flex items-center gap-2 border-b border-white/10 bg-black/30 px-4 py-3">
+          <div className="flex gap-1.5">
+            <span className="h-2.5 w-2.5 rounded-full bg-white/20" />
+            <span className="h-2.5 w-2.5 rounded-full bg-white/20" />
+            <span className="h-2.5 w-2.5 rounded-full bg-white/20" />
+          </div>
+          <div className="mx-auto rounded-md border border-white/5 bg-white/[0.04] px-3 py-0.5 text-[10px] tracking-wide text-white/40">
+            Quiz · Civilizaciones
+          </div>
+          <div className="w-10" />
+        </div>
+
+        {/* ghost overlay (pensando / respuesta) */}
+        <div className="pointer-events-none absolute inset-x-0 top-[54px] z-30 flex justify-center">
+          <AnimatePresence mode="wait">
+            {showPensando && (
+              <motion.div
+                key="pensando"
+                initial={{ opacity: 0, y: -8, filter: "blur(4px)" }}
+                animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                exit={{ opacity: 0, y: -4, filter: "blur(2px)" }}
+                transition={{ duration: 0.35, ease: "easeOut" }}
+                className="inline-flex items-center gap-1.5 rounded-full bg-black/40 px-3 py-1 text-[13px] font-medium tracking-wide text-white/80 ring-1 ring-white/10 backdrop-blur-md [text-shadow:0_1px_6px_rgba(0,0,0,0.6)]"
+              >
+                <span>Pensando</span>
+                <span className="inline-flex gap-0.5">
+                  <motion.span
+                    animate={{ opacity: [0.2, 1, 0.2] }}
+                    transition={{ duration: 1, repeat: Infinity }}
+                  >
+                    .
+                  </motion.span>
+                  <motion.span
+                    animate={{ opacity: [0.2, 1, 0.2] }}
+                    transition={{ duration: 1, repeat: Infinity, delay: 0.15 }}
+                  >
+                    .
+                  </motion.span>
+                  <motion.span
+                    animate={{ opacity: [0.2, 1, 0.2] }}
+                    transition={{ duration: 1, repeat: Infinity, delay: 0.3 }}
+                  >
+                    .
+                  </motion.span>
+                </span>
+              </motion.div>
+            )}
+            {showAnswer && (
+              <motion.div
+                key="answer"
+                initial={{ opacity: 0, y: -6, filter: "blur(3px)" }}
+                animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                exit={{ opacity: 0, filter: "blur(2px)" }}
+                transition={{ duration: 0.55, ease: "easeOut" }}
+                className="whitespace-nowrap rounded-full bg-black/40 px-3 py-1 text-[13px] font-medium tracking-wide text-white/90 ring-1 ring-white/10 backdrop-blur-md [text-shadow:0_1px_6px_rgba(0,0,0,0.6)]"
+              >
+                La civilización sumeria, en Mesopotamia.
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* body */}
+        <div className="relative px-6 py-7 sm:px-9 sm:py-9">
+          {/* question */}
+          <div className="relative inline-block">
+            <motion.span
+              aria-hidden
+              className="absolute inset-y-0 -left-1 -right-1 rounded bg-sky-400/35"
+              initial={{ clipPath: "inset(0 100% 0 0)", opacity: 0 }}
+              animate={{
+                clipPath: showSelection ? "inset(0 0% 0 0)" : "inset(0 100% 0 0)",
+                opacity: showSelection ? 1 : 0,
+              }}
+              transition={{
+                clipPath: { duration: 0.85, ease: [0.22, 1, 0.36, 1] },
+                opacity: { duration: 0.25 },
+              }}
+            />
+            <p className="relative text-[13px] font-medium leading-snug text-white sm:text-[15px]">
+              ¿A qué antigua civilización se atribuye el desarrollo del primer sistema de escritura conocido, el cuneiforme?
+            </p>
+          </div>
+
+          {/* options */}
+          <div className="mt-5 space-y-2">
+            <Option letter="A" label="Egipcios" highlighted={false} />
+            <Option letter="B" label="Sumerios" highlighted={optionBCorrect} />
+            <Option letter="C" label="Griegos" highlighted={false} />
+          </div>
+
+          {/* pagination */}
+          <div className="mt-6 flex items-center gap-3 text-[10px] text-white/35">
+            <span>01</span>
+            <div className="h-[2px] flex-1 rounded-full bg-white/10">
+              <div className="h-full w-[8%] rounded-full bg-white/50" />
+            </div>
+            <span>12</span>
+            <div className="ml-1 grid h-6 w-6 place-items-center rounded-full bg-white/10 text-white/60">
+              →
+            </div>
+          </div>
+
+          {/* cursor */}
+          <motion.div
+            className="pointer-events-none absolute z-40"
+            initial={false}
+            animate={{
+              left: cursor.left,
+              top: cursor.top,
+              scale: clicking ? 0.82 : 1,
+            }}
+            transition={{
+              left: { duration: 1.1, ease: [0.22, 1, 0.36, 1] },
+              top: { duration: 1.1, ease: [0.22, 1, 0.36, 1] },
+              scale: { duration: 0.18, ease: "easeOut" },
+            }}
+          >
+            <CursorIcon />
+            {/* click ripple */}
+            <AnimatePresence>
+              {clicking && (
+                <motion.span
+                  key="ripple"
+                  className="absolute -left-2 -top-2 h-8 w-8 rounded-full border border-white/60"
+                  initial={{ scale: 0.3, opacity: 0.8 }}
+                  animate={{ scale: 1.6, opacity: 0 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.5, ease: "easeOut" }}
+                />
+              )}
+            </AnimatePresence>
+          </motion.div>
+
+        </div>
+
+        {/* keys overlay — positioned on the full window, above everything */}
+        <AnimatePresence>
+          {showKeys && (
+            <motion.div
+              key="keys"
+              initial={{ opacity: 0, y: 14, scale: 0.92 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -8, scale: 0.96 }}
+              transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+              className="absolute left-1/2 top-1/2 z-40 flex -translate-x-1/2 -translate-y-1/2 items-center gap-2 rounded-2xl border border-white/20 bg-black/75 px-4 py-3 shadow-[0_20px_60px_-10px_rgba(0,0,0,0.9),0_0_40px_rgba(255,255,255,0.08)] backdrop-blur-2xl"
+            >
+              <Key label="⌘" delay={0} />
+              <span className="text-sm text-white/40">+</span>
+              <Key label="K" delay={0.14} />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
+
+      <p className="mt-4 text-center text-[11px] uppercase tracking-[0.22em] text-white/35">
+        Demo · Así se ve en tu pantalla
+      </p>
+    </div>
+  );
+}
+
+function Option({ letter, label, highlighted }: { letter: string; label: string; highlighted: boolean }) {
+  return (
+    <motion.div
+      animate={{
+        scale: highlighted ? 1.015 : 1,
+        borderColor: highlighted ? "rgba(244,114,182,0.45)" : "rgba(255,255,255,0.08)",
+        backgroundColor: highlighted ? "rgba(244,114,182,0.14)" : "rgba(255,255,255,0.03)",
+      }}
+      transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+      className="flex items-center gap-3 rounded-full border px-3 py-2"
+    >
+      <motion.span
+        animate={{
+          backgroundColor: highlighted ? "rgba(244,114,182,0.35)" : "rgba(255,255,255,0.10)",
+          color: highlighted ? "#ffe4ec" : "rgba(255,255,255,0.85)",
+        }}
+        transition={{ duration: 0.3 }}
+        className="grid h-7 w-7 place-items-center rounded-full text-[11px] font-semibold"
+      >
+        {letter}
+      </motion.span>
+      <motion.span
+        animate={{ color: highlighted ? "#ffe4ec" : "rgba(255,255,255,0.85)" }}
+        transition={{ duration: 0.3 }}
+        className="text-[13px] sm:text-sm"
+      >
+        {label}
+      </motion.span>
+      {highlighted && (
+        <motion.span
+          initial={{ opacity: 0, scale: 0.6 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.1, duration: 0.3 }}
+          className="ml-auto grid h-5 w-5 place-items-center rounded-full bg-rose-400/30 text-[10px] text-rose-50"
+        >
+          ✓
+        </motion.span>
+      )}
+    </motion.div>
+  );
+}
+
+function Key({ label, delay = 0 }: { label: string; delay?: number }) {
+  return (
+    <motion.kbd
+      initial={{ scale: 1, boxShadow: "0 0 0 rgba(255,255,255,0)" }}
+      animate={{
+        scale: [1, 0.88, 1],
+        boxShadow: [
+          "0 0 0 rgba(255,255,255,0)",
+          "0 0 20px rgba(255,255,255,0.35)",
+          "0 0 0 rgba(255,255,255,0)",
+        ],
+      }}
+      transition={{ duration: 0.5, delay, ease: "easeOut" }}
+      className="inline-grid h-9 min-w-[2.25rem] place-items-center rounded-xl border border-white/20 bg-white/10 px-2 font-sans text-sm font-semibold text-white"
+    >
+      {label}
+    </motion.kbd>
+  );
+}
+
+function CursorIcon() {
+  return (
+    <svg
+      width="22"
+      height="22"
+      viewBox="0 0 24 24"
+      fill="none"
+      className="drop-shadow-[0_6px_14px_rgba(0,0,0,0.7)]"
+    >
+      <path
+        d="M4 2.5 L19.5 12 L13 13.6 L15.8 20.6 L12.5 22 L9.6 15 L4 18 Z"
+        fill="white"
+        stroke="black"
+        strokeWidth="1.1"
+        strokeLinejoin="round"
+      />
+    </svg>
   );
 }
