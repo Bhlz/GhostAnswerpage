@@ -110,6 +110,8 @@ export default function GhostAnswerLanding() {
         <CommandRibbon />
       </section>
 
+      <ShortcutShowcase />
+
       <section id="como-funciona" className="relative z-10 mx-auto w-full max-w-7xl px-6 pb-24">
         <div className="mx-auto max-w-4xl">
           <h2 className="text-center text-2xl font-semibold sm:text-4xl">Cómo funciona</h2>
@@ -416,6 +418,164 @@ function Pill({ children }: { children: React.ReactNode }) {
     <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 backdrop-blur-xl">
       {children}
     </span>
+  );
+}
+
+const SHORTCUT_SEQUENCE_DURATIONS = [950, 700, 1000, 1100];
+
+function ShortcutShowcase() {
+  const [phase, setPhase] = useState(0);
+  const prefersReducedMotion = useReducedMotion();
+
+  useEffect(() => {
+    if (prefersReducedMotion) return;
+    const timer = setTimeout(() => {
+      setPhase((current) => (current + 1) % SHORTCUT_SEQUENCE_DURATIONS.length);
+    }, SHORTCUT_SEQUENCE_DURATIONS[phase]);
+    return () => clearTimeout(timer);
+  }, [phase, prefersReducedMotion]);
+
+  const cmdPressed = phase >= 1;
+  const actionKey = phase >= 3 ? "X" : "K";
+  const actionPressed = phase >= 2;
+  const showingDismiss = actionKey === "X";
+
+  return (
+    <section className="relative z-10 mx-auto w-full max-w-7xl px-6 pb-28 pt-4">
+      <div className="absolute inset-x-6 top-24 h-80 rounded-[3rem] bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.04),transparent_72%)] blur-3xl" />
+
+      <div className="relative">
+        <div className="flex items-center gap-5 text-[11px] uppercase tracking-[0.34em] text-white/38">
+          <span className="h-px w-12 bg-white/18" />
+          <span>04</span>
+          <span className="h-1 w-1 rounded-full bg-white/25" />
+          <span>Atajos</span>
+        </div>
+
+        <div className="mt-8 max-w-5xl">
+          <h2 className="text-5xl font-semibold tracking-tight text-white sm:text-6xl md:text-7xl">
+            Todo con el <span className="font-light italic text-white/35">teclado.</span>
+          </h2>
+          <p className="mt-8 max-w-4xl text-2xl leading-tight text-white/62 sm:text-3xl">
+            Mouse opcional. Atajos hechos para manos rapidas y respuestas que aparecen sin romper tu ritmo.
+          </p>
+        </div>
+
+        <div className="mt-16 grid gap-10 xl:grid-cols-[1.05fr_1fr] xl:items-center">
+          <div className="relative overflow-hidden rounded-[2.4rem] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.01))] px-8 py-12 shadow-[0_40px_120px_-50px_rgba(0,0,0,1)] backdrop-blur-xl sm:px-12 sm:py-16">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.05),transparent_45%)]" />
+            <div className="absolute inset-x-12 bottom-10 h-24 rounded-full bg-white/[0.03] blur-3xl" />
+            <div className="relative flex min-h-[420px] flex-col justify-center">
+              <div className="flex items-center justify-center gap-4 sm:gap-6">
+                <ShortcutKeyCap label="⌘" pressed={cmdPressed} />
+                <span className="text-4xl font-light text-white/34">+</span>
+                <ShortcutKeyCap label={actionKey} pressed={actionPressed} morphing={showingDismiss} />
+              </div>
+
+              <div className="mt-12 text-center text-[11px] uppercase tracking-[0.42em] text-white/38 sm:text-[12px]">
+                {showingDismiss ? "Ocultar GhostAnswer" : "Invocar GhostAnswer"}
+              </div>
+            </div>
+          </div>
+
+          <div className="relative space-y-8">
+            <ShortcutFeatureRow
+              active={!showingDismiss}
+              title="Pregunta instantanea"
+              description="copia lo que ves y obten respuesta"
+              actionKey="K"
+            />
+            <ShortcutFeatureRow
+              active={showingDismiss}
+              title="Ocultar al instante"
+              description="el fantasma se esfuma. Sin rastro"
+              actionKey="X"
+            />
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ShortcutFeatureRow({
+  active,
+  title,
+  description,
+  actionKey,
+}: {
+  active: boolean;
+  title: string;
+  description: string;
+  actionKey: string;
+}) {
+  return (
+    <div className="grid items-center gap-6 border-b border-white/10 pb-8 last:border-b-0 last:pb-0 sm:grid-cols-[1fr_auto]">
+      <div>
+        <div className="text-3xl font-medium tracking-tight text-white/92">{title}</div>
+        <div className="mt-2 text-xl leading-tight text-white/40">{description}</div>
+      </div>
+      <div className="flex items-center gap-3">
+        <ShortcutMiniKey label="⌘" active={active} />
+        <ShortcutMiniKey label={actionKey} active={active} />
+      </div>
+    </div>
+  );
+}
+
+function ShortcutKeyCap({
+  label,
+  pressed,
+  morphing = false,
+}: {
+  label: string;
+  pressed: boolean;
+  morphing?: boolean;
+}) {
+  return (
+    <motion.div
+      animate={{
+        y: pressed ? 10 : 0,
+        scale: pressed ? 0.96 : 1,
+        borderColor: pressed ? "rgba(255,255,255,0.24)" : "rgba(255,255,255,0.12)",
+        backgroundColor: pressed ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.03)",
+        boxShadow: pressed
+          ? "0 16px 40px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.16), 0 0 40px rgba(255,255,255,0.08)"
+          : "0 26px 60px rgba(0,0,0,0.72), inset 0 1px 0 rgba(255,255,255,0.1), 0 0 30px rgba(255,255,255,0.03)",
+      }}
+      transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+      className="relative grid h-28 w-28 place-items-center rounded-[1.7rem] border"
+    >
+      <div className="pointer-events-none absolute inset-0 rounded-[1.7rem] bg-[linear-gradient(180deg,rgba(255,255,255,0.05),transparent)]" />
+      <AnimatePresence mode="wait">
+        <motion.span
+          key={label}
+          initial={{ opacity: 0, y: morphing ? 16 : 8, filter: "blur(4px)" }}
+          animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+          exit={{ opacity: 0, y: -12, filter: "blur(4px)" }}
+          transition={{ duration: 0.24, ease: "easeOut" }}
+          className="relative text-4xl font-semibold text-white"
+        >
+          {label}
+        </motion.span>
+      </AnimatePresence>
+    </motion.div>
+  );
+}
+
+function ShortcutMiniKey({ label, active }: { label: string; active: boolean }) {
+  return (
+    <motion.div
+      animate={{
+        borderColor: active ? "rgba(255,255,255,0.22)" : "rgba(255,255,255,0.12)",
+        backgroundColor: active ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.03)",
+        opacity: active ? 1 : 0.72,
+      }}
+      transition={{ duration: 0.25 }}
+      className="grid h-14 w-14 place-items-center rounded-2xl border text-2xl text-white"
+    >
+      {label}
+    </motion.div>
   );
 }
 
