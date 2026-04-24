@@ -48,20 +48,23 @@ export default function GhostAnswerLanding() {
         />
       )}
 
-      <nav className="relative z-20 mx-auto flex w-full max-w-7xl items-center justify-between px-6 py-6">
-        <div className="flex items-center gap-3">
-          <div className="grid h-9 w-9 place-items-center rounded-2xl bg-white/10 backdrop-blur-xl ring-1 ring-white/10">
-            <EyeOff className="h-5 w-5" />
+      <nav className="fixed inset-x-0 top-0 z-50 px-4 pt-4">
+        <div className="mx-auto flex w-full max-w-7xl items-center justify-between rounded-2xl border border-white/15 bg-black/40 px-4 py-3 shadow-[0_16px_60px_-24px_rgba(0,0,0,0.9)] backdrop-blur-2xl supports-[backdrop-filter]:bg-black/30 sm:px-6">
+          <div className="flex items-center">
+            <img
+              src="/ghostanswer-logo.svg"
+              alt="GhostAnswer"
+              className="h-10 w-auto rounded-xl border border-white/10 bg-black p-1.5"
+            />
           </div>
-          <span className="text-lg font-semibold tracking-tight">GhostAnswer</span>
+          <MagneticButton href="/downloads/ghostanswer-v1.0.0.zip" download>
+            <Download className="h-4 w-4" />
+            <span>Descargar</span>
+          </MagneticButton>
         </div>
-        <MagneticButton href="/downloads/ghostanswer-v1.0.0.zip" download>
-          <Download className="h-4 w-4" />
-          <span>Descargar</span>
-        </MagneticButton>
       </nav>
 
-      <section className="relative z-10 mx-auto mt-4 flex w-full max-w-7xl flex-col items-center px-6 pb-20 pt-10 md:pt-16">
+      <section className="relative z-10 mx-auto mt-0 flex w-full max-w-7xl flex-col items-center px-6 pb-20 pt-28 md:pt-32">
         <motion.p
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -188,7 +191,11 @@ function Veil({ revealed }: { revealed: boolean }) {
           transition={{ duration: 0.6 }}
           className="flex flex-col items-center text-white/70"
         >
-          <div className="mb-4 text-sm uppercase tracking-[0.2em]">GhostAnswer</div>
+          <img
+            src="/ghostanswer-logo.svg"
+            alt="GhostAnswer"
+            className="mb-4 h-12 w-auto rounded-xl bg-white p-2"
+          />
           <div className="text-center text-lg md:text-xl">Mueve el mouse o toca la pantalla para revelar</div>
           <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs backdrop-blur-xl">
             <EyeOff className="h-4 w-4" /> IA invisible
@@ -474,8 +481,8 @@ function HeroDemo() {
               className="absolute inset-y-0 -left-1 -right-1 rounded bg-sky-400/35"
               initial={{ clipPath: "inset(0 100% 0 0)", opacity: 0 }}
               animate={{
-                clipPath: showSelection ? "inset(0 0% 0 0)" : "inset(0 100% 0 0)",
-                opacity: showSelection ? 1 : 0,
+                clipPath: selectionClip,
+                opacity: selectionOpacity,
               }}
               transition={{
                 clipPath: { duration: 0.85, ease: [0.22, 1, 0.36, 1] },
